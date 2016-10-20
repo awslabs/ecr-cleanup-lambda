@@ -23,4 +23,16 @@ Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScrip
     3) Compress the contents of folder (and not the folder)
 
 
+##Package Upload to Lambda
 
+    1) Run the below command
+    
+    aws lambda create-function --function-name {NAME_OF_FUNCTION} --runtime python2.7 
+    --role {ARN_NUMBER} --handler main.handler --timeout 15 
+    --zip-file fileb://{ZIP_FILE_PATH}
+
+##Package Update to Lambda
+
+    1) Run the below command
+    
+    aws lambda update-function-code --function-name {NAME_OF_FUNCTION} --zip-file fileb://{ZIP_FILE_PATH}

@@ -40,6 +40,7 @@ def handler(event, context):
             registryId=repository['registryId'],
             repositoryName=repository['repositoryName']
         )
+        #print(images)
         for image in images['imageDetails']:
             #print(image)
             timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
@@ -50,13 +51,13 @@ def handler(event, context):
                         if running_containers:
                             for running_image in running_containers:
                                 if running_image != repourl:
-                                    deletesha.append({'imageTag': image['imageDigest']})
+                                    deletesha.append({'imageDigest': image['imageDigest']})
                         else:
-                            deletesha.append({'imageTag': image['imageDigest']})
+                            deletesha.append({'imageDigest': image['imageDigest']})
                 else:
-                    deletesha.append({'imageTag': image['imageDigest']})
+                    deletesha.append({'imageDigest': image['imageDigest']})
 
-        delete_images(ecr_client, deletesha, repository['repositoryArn'], repository['repositoryName'])
+        delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
 
 
 
