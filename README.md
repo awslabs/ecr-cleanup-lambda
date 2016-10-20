@@ -1,0 +1,26 @@
+#Lambda function for automated cleanup of Amazon Elastic Container Registry
+
+## Authentication with AWS
+Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScriptSDK/guide/node-configuring.html
+
+## Instructions to use the VirtualEnv for Python execution
+
+    1) Just to prevent or causing any problems with your system python version conflicting 
+    with the application, use of virtual env is recommended
+    2) pip install python 3
+    3) Install virtualenv by virtualenv
+
+    $ pip install virtualenv
+    $ virtualenv -p PATH_TO_YOUR_PYTHON_3 cloudformtion
+    $ virtualenv ~/.virtualenvs/cloudformtion
+    $ source ~/.virtualenvs/cloudformtion/bin/activate
+
+
+## Package generation for lambda
+
+    1) CD in the folder, which has main.py
+    2) Run -->  pip install -r requirements.txt -t {THE_FOLDER_PATH}
+    3) Compress the contents of folder (and not the folder)
+
+
+
