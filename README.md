@@ -14,17 +14,13 @@ Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScrip
     $ virtualenv -p PATH_TO_YOUR_PYTHON_3 cloudformtion
     $ virtualenv ~/.virtualenvs/cloudformtion
     $ source ~/.virtualenvs/cloudformtion/bin/activate
-
-
+    
 ## Package generation for lambda
 
     1) CD in the folder, which has main.py
     2) Run -->  pip install -r requirements.txt -t {THE_FOLDER_PATH}
     3) Compress the contents of folder (and not the folder)
-
-
-
-
+    
 ##Package Upload to Lambda
 
     1) Run the below command
@@ -32,9 +28,7 @@ Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScrip
     aws lambda create-function --function-name {NAME_OF_FUNCTION} --runtime python2.7 
     --role {ARN_NUMBER} --handler main.handler --timeout 15 
     --zip-file fileb://{ZIP_FILE_PATH}
-
-
-
+    
 ##Package Update to Lambda
 
     1) Run the below command
