@@ -52,17 +52,20 @@ def handler(event, context):
                         if running_containers:
                             for running_image in running_containers:
                                 if running_image != repourl:
-                                    deletesha.append({'imageDigest': image['imageDigest']})
+                                    appendtolist(deletesha,{'imageDigest': image['imageDigest']})
                         else:
-                            deletesha.append({'imageDigest': image['imageDigest']})
+                            appendtolist(deletesha, {'imageDigest': image['imageDigest']})
                 else:
-                    deletesha.append({'imageDigest': image['imageDigest']})
+                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
 
         if deletesha:
             delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
         else:
             print("Nothing to delete in repository : "+repository['repositoryName'])
 
+def appendtolist(list,id):
+    if not {'imageDigest': id} in list:
+        list.append({'imageDigest': id})
 
 
 def delete_images(ecr_client, deletesha, id, name):
@@ -74,8 +77,12 @@ def delete_images(ecr_client, deletesha, id, name):
          )
         print (delete_response)
     else:
-        printer = "{registryId:"+id+",repositoryName:"+name+",imageIds:"+".".join(deletesha)+"}"
-        print(printer)
+        print("{")
+        print("registryId:"+id)
+        print("repositoryName:"+name)
+        print("imageIds:",end='')
+        print(deletesha)
+        print("}")
 
 
 
@@ -85,6 +92,10 @@ if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
     parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=False, action='store', dest='dryrun')
+    parser.add_argument('-daystokeep', help='Number of days to keep the images', default=None,
+                        action='store', dest='daystokeep')
+
     args = parser.parse_args()
     dryrunflag = args.dryrun
+    daystokeep = args.daystokeep
     handler(request, None)
