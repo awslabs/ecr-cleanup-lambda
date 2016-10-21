@@ -1,6 +1,7 @@
 from __future__ import print_function
 import boto3
 import datetime
+import argparse
 
 
 def handler(event, context):
@@ -57,20 +58,33 @@ def handler(event, context):
                 else:
                     deletesha.append({'imageDigest': image['imageDigest']})
 
-        delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
+        if deletesha:
+            delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
+        else:
+            print("Nothing to delete in repository : "+repository['repositoryName'])
 
 
 
 def delete_images(ecr_client, deletesha, id, name):
-    delete_response = ecr_client.batch_delete_image(
-        registryId=id,
-        repositoryName=name,
-        imageIds=deletesha
-     )
-    print (delete_response)
+    if not dryrunflag:
+        delete_response = ecr_client.batch_delete_image(
+            registryId=id,
+            repositoryName=name,
+            imageIds=deletesha
+         )
+        print (delete_response)
+    else:
+        printer = "{registryId:"+id+",repositoryName:"+name+",imageIds:"+".".join(deletesha)+"}"
+        print(printer)
+
+
 
 
 # Below is the test harness
 if __name__ == '__main__':
     request = {"None": "None"}
+    parser = argparse.ArgumentParser(description='Deletes stale ECR images')
+    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=False, action='store', dest='dryrun')
+    args = parser.parse_args()
+    dryrunflag = args.dryrun
     handler(request, None)
