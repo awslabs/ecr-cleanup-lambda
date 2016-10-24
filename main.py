@@ -5,11 +5,19 @@ import argparse
 
 
 def handler(event, context):
-    ecr_client = boto3.client('ecr')
+    ecs_regions = ['us-east-1','us-east-2','us-west-1','us-west-2','eu-central-1',
+                   'eu-west-1','ap-northeast-1','ap-southeast-1','ap-southeast-2']
+    #print(region_response)
+    for region in ecs_regions:
+        discover_delete_images(region)
+
+def discover_delete_images(regionname):
+    print("Discovering images in "+regionname)
+    ecr_client = boto3.client('ecr',region_name=regionname)
     repositories = ecr_client.describe_repositories(maxResults=100)
     #print(repositories)
 
-    ecs_client = boto3.client('ecs')
+    ecs_client = boto3.client('ecs',region_name=regionname)
 
     list_clusters = ecs_client.list_clusters()
     running_containers = []
@@ -44,8 +52,8 @@ def handler(event, context):
         #print(images)
         for image in images['imageDetails']:
             #print(image)
-            timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
-            if timedelta > datetime.timedelta(days=1):
+            #timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
+            #if timedelta > datetime.timedelta(days=1):
                 if 'imageTags' in image:
                     if "latest" not in image['imageTags'][0]:
                         repourl = repository['repositoryUri']+":"+image['imageTags'][0]
