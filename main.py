@@ -84,27 +84,32 @@ def discover_delete_images(regionname):
                 nextmarker = image_response['imageDetails']['nextToken']
             else:
                 break
-        #print(images)
+
+        images.sort(key=lambda k: k['imagePushedAt'],reverse=True)
         for image in images:
             #print(image)
             #timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
             #if timedelta > datetime.timedelta(days=1):
-                if 'imageTags' in image:
-                    if "latest" not in image['imageTags'][0]:
-                        repourl = repository['repositoryUri']+":"+image['imageTags'][0]
+            if 'imageTags' in image:
+                for tag in image['imageTags']:
+                    if "latest" not in tag:
+                        repourl = repository['repositoryUri'] + ":" + tag
                         if running_containers:
                             for running_image in running_containers:
                                 if running_image != repourl:
-                                    appendtolist(deletesha,{'imageDigest': image['imageDigest']})
+                                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
                         else:
                             appendtolist(deletesha, {'imageDigest': image['imageDigest']})
-                else:
-                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
 
+
+            else:
+                appendtolist(deletesha, {'imageDigest': image['imageDigest']})
         if deletesha:
             delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
         else:
             print("Nothing to delete in repository : "+repository['repositoryName'])
+
+
 
 def appendtolist(list,id):
     if not {'imageDigest': id} in list:
