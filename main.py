@@ -87,28 +87,28 @@ def discover_delete_images(regionname):
 
         images.sort(key=lambda k: k['imagePushedAt'],reverse=True)
         for image in images:
-            #print(image)
-            #timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
-            #if timedelta > datetime.timedelta(days=1):
-            if 'imageTags' in image:
-                for tag in image['imageTags']:
-                    if "latest" not in tag:
-                        repourl = repository['repositoryUri'] + ":" + tag
-                        if running_containers:
-                            for running_image in running_containers:
-                                if running_image != repourl:
-                                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
-                        else:
-                            appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+            # print(image)
+            # timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
+            # if timedelta > datetime.timedelta(days=1):
+            if images.index(image) > imagestokeep:
+                if 'imageTags' in image:
+                    for tag in image['imageTags']:
+                        if "latest" not in tag:
+                            repourl = repository['repositoryUri'] + ":" + tag
+                            if running_containers:
+                                for running_image in running_containers:
+                                    if running_image != repourl:
+                                        appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                            else:
+                                appendtolist(deletesha, {'imageDigest': image['imageDigest']})
 
 
-            else:
-                appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                else:
+                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
         if deletesha:
             delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
         else:
-            print("Nothing to delete in repository : "+repository['repositoryName'])
-
+            print("Nothing to delete in repository : " + repository['repositoryName'])
 
 
 def appendtolist(list,id):
@@ -142,8 +142,11 @@ if __name__ == '__main__':
     parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=False, action='store', dest='dryrun')
     parser.add_argument('-daystokeep', help='Number of days to keep the images', default=None,
                         action='store', dest='daystokeep')
+    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=10,
+                        action='store', dest='imagestokeep')
 
     args = parser.parse_args()
     dryrunflag = args.dryrun
     daystokeep = args.daystokeep
+    imagestokeep = int(args.imagestokeep)
     handler(request, None)
