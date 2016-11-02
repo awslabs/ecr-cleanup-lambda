@@ -14,36 +14,53 @@ def handler(event, context):
 def discover_delete_images(regionname):
     print("Discovering images in "+regionname)
     ecr_client = boto3.client('ecr',region_name=regionname)
-    repositories = ecr_client.describe_repositories(maxResults=100)
+
+    done=False
+    marker = None
+    repositories = []
+    while not done:
+        if marker:
+            describerepo_response = ecr_client.describe_repositories(maxResults=100,nextToken=marker)
+        else :
+            describerepo_response = ecr_client.describe_repositories(maxResults=100)
+
+        if 'nextToken' in describerepo_response:
+            marker = describerepo_response['nextToken']
+            for repo in describerepo_response['repositories']:
+                repositories.append(repo)
+        else :
+            for repo in describerepo_response['repositories']:
+                repositories.append(repo)
+            done = True
+
     #print(repositories)
 
     ecs_client = boto3.client('ecs',region_name=regionname)
 
-    list_clusters = ecs_client.list_clusters()
+    listclusters_paginator = ecs_client.get_paginator('list_clusters')
     running_containers = []
-    for cluster in list_clusters['clusterArns']:
-        tasks_list = ecs_client.list_tasks(
-            cluster=cluster,
-            desiredStatus='RUNNING'
-        )
-        if tasks_list['taskArns']:
-            describe_tasks_list = ecs_client.describe_tasks(
-                cluster=cluster,
-                tasks=tasks_list['taskArns']
-            )
-
-            for tasks_list in describe_tasks_list['tasks']:
-                if tasks_list['taskDefinitionArn'] is not None:
-                    response = ecs_client.describe_task_definition(
-                        taskDefinition=tasks_list['taskDefinitionArn']
+    for response_listclusterpaginator in listclusters_paginator.paginate():
+        for cluster in response_listclusterpaginator['clusterArns']:
+            listtasks_paginator = ecs_client.get_paginator('list_tasks')
+            for reponse_listtaskpaginator in listtasks_paginator.paginate(cluster=cluster,desiredStatus='RUNNING'):
+                if reponse_listtaskpaginator['taskArns']:
+                    describe_tasks_list = ecs_client.describe_tasks(
+                        cluster=cluster,
+                        tasks=reponse_listtaskpaginator['taskArns']
                     )
-                    for container in response['taskDefinition']['containerDefinitions']:
-                        if '.dkr.ecr.' in container['image'] and ":" in container['image']:
-                            if container['image'] not in running_containers:
-                                running_containers.append(container['image'])
+
+                    for tasks_list in describe_tasks_list['tasks']:
+                        if tasks_list['taskDefinitionArn'] is not None:
+                            response = ecs_client.describe_task_definition(
+                                taskDefinition=tasks_list['taskDefinitionArn']
+                            )
+                            for container in response['taskDefinition']['containerDefinitions']:
+                                if '.dkr.ecr.' in container['image'] and ":" in container['image']:
+                                    if container['image'] not in running_containers:
+                                        running_containers.append(container['image'])
 
     #print(running_containers)
-    for repository in repositories['repositories']:
+    for repository in repositories:
         deletesha = []
         images = ecr_client.describe_images(
             registryId=repository['registryId'],
