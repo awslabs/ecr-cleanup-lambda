@@ -24,14 +24,14 @@ def discover_delete_images(regionname):
         else :
             describerepo_response = ecr_client.describe_repositories(maxResults=100)
 
+        for repo in describerepo_response['repositories']:
+            repositories.append(repo)
+
         if 'nextToken' in describerepo_response:
             marker = describerepo_response['nextToken']
-            for repo in describerepo_response['repositories']:
-                repositories.append(repo)
+
         else :
-            for repo in describerepo_response['repositories']:
-                repositories.append(repo)
-            done = True
+            break
 
     #print(repositories)
 
@@ -62,12 +62,30 @@ def discover_delete_images(regionname):
     #print(running_containers)
     for repository in repositories:
         deletesha = []
-        images = ecr_client.describe_images(
-            registryId=repository['registryId'],
-            repositoryName=repository['repositoryName']
-        )
+        nextmarker = None
+        done = False
+        images = []
+        while not done:
+            if nextmarker:
+                image_response = ecr_client.describe_images(
+                    registryId=repository['registryId'],
+                    repositoryName=repository['repositoryName'],
+                    nextmarker=nextmarker)
+            else:
+                image_response = ecr_client.describe_images(
+                    registryId=repository['registryId'],
+                    repositoryName=repository['repositoryName']
+                )
+
+            for image in image_response['imageDetails']:
+                images.append(image)
+
+            if 'nextmarker' in image_response['imageDetails']:
+                nextmarker = image_response['imageDetails']['nextToken']
+            else:
+                break
         #print(images)
-        for image in images['imageDetails']:
+        for image in images:
             #print(image)
             #timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
             #if timedelta > datetime.timedelta(days=1):
