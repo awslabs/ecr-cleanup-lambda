@@ -1,9 +1,7 @@
 from __future__ import print_function
 import boto3
-import datetime
 import argparse
 import requests
-import json
 
 
 def handler(event, context):
