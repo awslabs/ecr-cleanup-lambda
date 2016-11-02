@@ -1,3 +1,10 @@
+'''
+Copyright 2016 Amazon.com, Inc. or its affiliates.  All Rights Reserved.  Licensed under the
+Amazon Software License (the "License").  You may not use this file except in compliance with the License. A copy of the
+License is located at http://aws.amazon.com/asl or in the "license" file accompanying this file.  This file is distributed on an "AS
+IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License.
+'''
 from __future__ import print_function
 import boto3
 import argparse
@@ -143,11 +150,8 @@ def delete_images(ecr_client, deletesha, id, name):
 if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
-    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=False, action='store', dest='dryrun')
-    parser.add_argument('-daystokeep', help='Number of days to keep the images', default=None,
-                        action='store', dest='daystokeep')
-    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=10,
-                        action='store', dest='imagestokeep')
+    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=True, action='store', dest='dryrun')
+    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=10, action='store', dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
