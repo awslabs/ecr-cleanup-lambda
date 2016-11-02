@@ -34,3 +34,20 @@ Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScrip
     1) Run the below command
     
     aws lambda update-function-code --function-name {NAME_OF_FUNCTION} --zip-file fileb://{ZIP_FILE_PATH}
+
+
+##Examples
+Prints the image, which are not used by running tasks and are older than last 10 versions, in all regions
+python main.py
+
+
+Deletes the images, which are not used by running tasks and are older than last 10 versions, in all regions
+python main.py –dryrun False
+
+
+Deletes the images, which are not used by running tasks and are older than last 20 versions, in all regions
+python main.py –dryrun False –daystokeep 20
+
+
+Deletes the images, which are not used by running tasks and are older than last 20 versions, in Oregon only
+python main.py –dryrun False –daystokeep 20 –region us-west-2
