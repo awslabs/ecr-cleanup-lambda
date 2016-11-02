@@ -2,13 +2,19 @@ from __future__ import print_function
 import boto3
 import datetime
 import argparse
+import requests
+import json
 
 
 def handler(event, context):
-    ecs_regions = ['us-east-1','us-east-2','us-west-1','us-west-2','eu-central-1',
-                   'eu-west-1','ap-northeast-1','ap-southeast-1','ap-southeast-2']
-    #print(region_response)
-    for region in ecs_regions:
+
+    if not region:
+        partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
+        for partition in partitions:
+            if partition['partition'] == "aws":
+                for endpoint in partition['services']['ecs']['endpoints']:
+                    discover_delete_images(endpoint)
+    else:
         discover_delete_images(region)
 
 def discover_delete_images(regionname):
@@ -144,9 +150,11 @@ if __name__ == '__main__':
                         action='store', dest='daystokeep')
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=10,
                         action='store', dest='imagestokeep')
+    parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
     dryrunflag = args.dryrun
     daystokeep = args.daystokeep
+    region = args.region
     imagestokeep = int(args.imagestokeep)
     handler(request, None)
