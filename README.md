@@ -37,17 +37,19 @@ Use your preferred means as explained at http://docs.aws.amazon.com/AWSJavaScrip
 
 
 ##Examples
-Prints the image, which are not used by running tasks and are older than last 10 versions, in all regions
+Prints the images that are not used by running tasks and which are older than the last 100 versions, in all regions:
 python main.py
 
 
-Deletes the images, which are not used by running tasks and are older than last 10 versions, in all regions
+Deletes the images that are not used by running tasks and which are older than the last 100 versions, in all regions:
 python main.py –dryrun False
 
 
-Deletes the images, which are not used by running tasks and are older than last 20 versions, in all regions
-python main.py –dryrun False –daystokeep 20
+Deletes the images that are not used by running tasks and which are older than the last 20 versions (in each repository), in all regions:
+python main.py –dryrun False –imagestokeep 20
 
 
-Deletes the images, which are not used by running tasks and are older than last 20 versions, in Oregon only
-python main.py –dryrun False –daystokeep 20 –region us-west-2
+Deletes the images that are not used by running tasks and which are older than the last 20 versions (in each repository), in Oregon only:
+python main.py –dryrun False –imagestokeep 20 –region us-west-2
+
+
