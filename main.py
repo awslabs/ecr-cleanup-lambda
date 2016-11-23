@@ -66,28 +66,13 @@ def discover_delete_images(regionname):
     #print(running_containers)
     for repository in repositories:
         deletesha = []
-        nextmarker = None
-        done = False
         images = []
-        while not done:
-            if nextmarker:
-                image_response = ecr_client.describe_images(
-                    registryId=repository['registryId'],
-                    repositoryName=repository['repositoryName'],
-                    nextmarker=nextmarker)
-            else:
-                image_response = ecr_client.describe_images(
-                    registryId=repository['registryId'],
-                    repositoryName=repository['repositoryName']
-                )
-
-            for image in image_response['imageDetails']:
+        describeimage_paginator = ecr_client.get_paginator('describe_images')
+        for response_describeimagepaginator in describeimage_paginator.paginate(
+                registryId=repository['registryId'],
+                repositoryName=repository['repositoryName']):
+            for image in response_describeimagepaginator['imageDetails']:
                 images.append(image)
-
-            if 'nextmarker' in image_response['imageDetails']:
-                nextmarker = image_response['imageDetails']['nextToken']
-            else:
-                break
 
         images.sort(key=lambda k: k['imagePushedAt'],reverse=True)
         for image in images:
@@ -149,7 +134,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     dryrunflag = args.dryrun
-    #daystokeep = args.daystokeep
     region = args.region
     imagestokeep = int(args.imagestokeep)
     handler(request, None)
