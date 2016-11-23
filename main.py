@@ -66,6 +66,8 @@ def discover_delete_images(regionname):
     print("Images that are running")
     print(running_containers)
     for repository in repositories:
+        print ("------------------------")
+        print("Starting with repository :"+repository['repositoryUri'])
         deletesha = []
         deletetag = []
         images = []
@@ -85,15 +87,17 @@ def discover_delete_images(regionname):
                 if 'imageTags' in image:
                     for tag in image['imageTags']:
                         if "latest" not in tag:
-                            repourl = repository['repositoryUri'] + ":" + tag
+                            imageurl = repository['repositoryUri'] + ":" + tag
                             if running_containers:
                                 for running_image in running_containers:
-                                    if running_image != repourl:
-                                        appendtolist(deletesha, {'imageDigest': image['imageDigest']})
-                                        appendtotaglist(deletetag,repourl)
+                                    if repository['repositoryUri'] in running_image:
+                                        if running_image != imageurl:
+                                            #print("Adding "+imageurl+" for deletion as "+running_image +" not equals "+imageurl)
+                                            appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                            appendtotaglist(deletetag,imageurl)
                             else:
                                 appendtolist(deletesha, {'imageDigest': image['imageDigest']})
-                                appendtotaglist(deletetag,repourl)
+                                appendtotaglist(deletetag,imageurl)
 
 
                 else:
@@ -130,7 +134,7 @@ def delete_images(ecr_client, deletesha,deletetag, id, name):
         print("}")
     if deletetag:
         for ids in deletetag:
-            print("Image URLs that are marked for deletetion : " + ids)
+            print("Image URLs that are marked for deletion : " + ids)
 
 
 
