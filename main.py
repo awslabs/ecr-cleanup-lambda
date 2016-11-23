@@ -31,23 +31,11 @@ def discover_delete_images(regionname):
     print("Discovering images in "+regionname)
     ecr_client = boto3.client('ecr',region_name=regionname)
 
-    done=False
-    marker = None
     repositories = []
-    while not done:
-        if marker:
-            describerepo_response = ecr_client.describe_repositories(maxResults=100,nextToken=marker)
-        else :
-            describerepo_response = ecr_client.describe_repositories(maxResults=100)
-
-        for repo in describerepo_response['repositories']:
+    describerepo_paginator = ecr_client.get_paginator('describe_repositories')
+    for response_listrepopaginator in describerepo_paginator.paginate():
+        for repo in response_listrepopaginator['repositories']:
             repositories.append(repo)
-
-        if 'nextToken' in describerepo_response:
-            marker = describerepo_response['nextToken']
-
-        else :
-            break
 
     #print(repositories)
 
@@ -161,7 +149,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     dryrunflag = args.dryrun
-    daystokeep = args.daystokeep
+    #daystokeep = args.daystokeep
     region = args.region
     imagestokeep = int(args.imagestokeep)
     handler(request, None)
