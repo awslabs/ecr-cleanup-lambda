@@ -63,9 +63,11 @@ def discover_delete_images(regionname):
                                     if container['image'] not in running_containers:
                                         running_containers.append(container['image'])
 
-    #print(running_containers)
+    print("Images that are running")
+    print(running_containers)
     for repository in repositories:
         deletesha = []
+        deletetag = []
         images = []
         describeimage_paginator = ecr_client.get_paginator('describe_images')
         for response_describeimagepaginator in describeimage_paginator.paginate(
@@ -88,14 +90,16 @@ def discover_delete_images(regionname):
                                 for running_image in running_containers:
                                     if running_image != repourl:
                                         appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                        appendtotaglist(deletetag,repourl)
                             else:
                                 appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                appendtotaglist(deletetag,repourl)
 
 
                 else:
                     appendtolist(deletesha, {'imageDigest': image['imageDigest']})
         if deletesha:
-            delete_images(ecr_client, deletesha, repository['registryId'], repository['repositoryName'])
+            delete_images(ecr_client, deletesha,deletetag, repository['registryId'], repository['repositoryName'])
         else:
             print("Nothing to delete in repository : " + repository['repositoryName'])
 
@@ -104,8 +108,12 @@ def appendtolist(list,id):
     if not {'imageDigest': id} in list:
         list.append({'imageDigest': id})
 
+def appendtotaglist(list,id):
+    if not id in list:
+        list.append(id)
 
-def delete_images(ecr_client, deletesha, id, name):
+
+def delete_images(ecr_client, deletesha,deletetag, id, name):
     if not dryrunflag:
         delete_response = ecr_client.batch_delete_image(
             registryId=id,
@@ -120,6 +128,9 @@ def delete_images(ecr_client, deletesha, id, name):
         print("imageIds:",end='')
         print(deletesha)
         print("}")
+    if deletetag:
+        for ids in deletetag:
+            print("Image URLs that are marked for deletetion : " + ids)
 
 
 
