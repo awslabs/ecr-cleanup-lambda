@@ -89,12 +89,9 @@ def discover_delete_images(regionname):
                         if "latest" not in tag:
                             imageurl = repository['repositoryUri'] + ":" + tag
                             if running_containers:
-                                for running_image in running_containers:
-                                    if repository['repositoryUri'] in running_image:
-                                        if running_image != imageurl:
-                                            #print("Adding "+imageurl+" for deletion as "+running_image +" not equals "+imageurl)
-                                            appendtolist(deletesha, {'imageDigest': image['imageDigest']})
-                                            appendtotaglist(deletetag,imageurl)
+                                if imageurl not in running_containers:
+                                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                    appendtotaglist(deletetag, imageurl)
                             else:
                                 appendtolist(deletesha, {'imageDigest': image['imageDigest']})
                                 appendtotaglist(deletetag,imageurl)
