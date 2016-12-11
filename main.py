@@ -79,19 +79,27 @@ def discover_delete_images(regionname):
                 images.append(image)
 
         images.sort(key=lambda k: k['imagePushedAt'],reverse=True)
+
+        #Get ImageDigest from ImageURL for running images. Do this for every repository
+        running_sha = []
         for image in images:
-            # print(image)
-            # timedelta = datetime.date.today() - datetime.datetime.date(image['imagePushedAt'])
-            # if timedelta > datetime.timedelta(days=1):
-            if images.index(image) > imagestokeep:
+            if 'imageTags' in image:
+                for tag in image['imageTags']:
+                    imageurl = repository['repositoryUri'] + ":" + tag
+                    for runningimages in running_containers:
+                        if imageurl == runningimages:
+                            if imageurl not in running_sha:
+                                running_sha.append(image['imageDigest'])
+        for image in images:
+            if images.index(image) >= imagestokeep:
                 if 'imageTags' in image:
                     for tag in image['imageTags']:
                         if "latest" not in tag:
-                            imageurl = repository['repositoryUri'] + ":" + tag
-                            if running_containers:
-                                if imageurl not in running_containers:
+                            if running_sha:
+                                if image['imageDigest'] not in running_sha:
                                     appendtolist(deletesha, {'imageDigest': image['imageDigest']})
                                     appendtotaglist(deletetag, imageurl)
+
                             else:
                                 appendtolist(deletesha, {'imageDigest': image['imageDigest']})
                                 appendtotaglist(deletetag,imageurl)
@@ -132,8 +140,6 @@ def delete_images(ecr_client, deletesha,deletetag, id, name):
     if deletetag:
         for ids in deletetag:
             print("Image URLs that are marked for deletion : " + ids)
-
-
 
 
 # Below is the test harness
