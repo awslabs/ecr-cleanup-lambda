@@ -15,17 +15,24 @@ import boto3
 import argparse
 import requests
 
+config = {
+    'dryrunflag': True,
+    'region': None,
+    'imagestokeep': 100
+    }
 
 def handler(event, context):
 
-    if not region:
+    config.update(event);
+
+    if not config['region']:
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
         for partition in partitions:
             if partition['partition'] == "aws":
                 for endpoint in partition['services']['ecs']['endpoints']:
                     discover_delete_images(endpoint)
     else:
-        discover_delete_images(region)
+        discover_delete_images(config['region'])
 
 def discover_delete_images(regionname):
     print("Discovering images in "+regionname)
@@ -91,7 +98,7 @@ def discover_delete_images(regionname):
                             if imageurl not in running_sha:
                                 running_sha.append(image['imageDigest'])
         for image in images:
-            if images.index(image) >= imagestokeep:
+            if images.index(image) >= config['imagestokeep']:
                 if 'imageTags' in image:
                     for tag in image['imageTags']:
                         if "latest" not in tag:
@@ -123,7 +130,7 @@ def appendtotaglist(list,id):
 
 
 def delete_images(ecr_client, deletesha,deletetag, id, name):
-    if not dryrunflag:
+    if not config['dryrunflag']:
         delete_response = ecr_client.batch_delete_image(
             registryId=id,
             repositoryName=name,
@@ -144,14 +151,14 @@ def delete_images(ecr_client, deletesha,deletetag, id, name):
 
 # Below is the test harness
 if __name__ == '__main__':
-    request = {"None": "None"}
+    request = {}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
     parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=True, action='store', dest='dryrun')
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=100, action='store', dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
-    dryrunflag = args.dryrun
-    region = args.region
-    imagestokeep = int(args.imagestokeep)
+    request['dryrunflag'] = args.dryrun
+    request['region'] = args.region
+    request['imagestokeep'] = int(args.imagestokeep)
     handler(request, None)
