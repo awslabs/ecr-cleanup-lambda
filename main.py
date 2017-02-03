@@ -104,16 +104,16 @@ def discover_delete_images(regionname):
                         if "latest" not in tag:
                             if running_sha:
                                 if image['imageDigest'] not in running_sha:
-                                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                    appendtolist(deletesha, image['imageDigest'])
                                     appendtotaglist(deletetag, imageurl)
 
                             else:
-                                appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                                appendtolist(deletesha, image['imageDigest'])
                                 appendtotaglist(deletetag,imageurl)
 
 
                 else:
-                    appendtolist(deletesha, {'imageDigest': image['imageDigest']})
+                    appendtolist(deletesha, image['imageDigest'])
         if deletesha:
             delete_images(ecr_client, deletesha,deletetag, repository['registryId'], repository['repositoryName'])
         else:
