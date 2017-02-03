@@ -11,21 +11,28 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the speci
 limitations under the License.
 '''
 from __future__ import print_function
+import os
 import boto3
 import argparse
 import requests
 
 
+REGION = os.environ.get('REGION', None)
+DRYRUN = bool(os.environ.get('DRYRUN', 1))
+IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
+
+
+
 def handler(event, context):
 
-    if not region:
+    if not REGION:
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
         for partition in partitions:
             if partition['partition'] == "aws":
                 for endpoint in partition['services']['ecs']['endpoints']:
                     discover_delete_images(endpoint)
     else:
-        discover_delete_images(region)
+        discover_delete_images(REGION)
 
 def discover_delete_images(regionname):
     print("Discovering images in "+regionname)
@@ -91,7 +98,7 @@ def discover_delete_images(regionname):
                             if imageurl not in running_sha:
                                 running_sha.append(image['imageDigest'])
         for image in images:
-            if images.index(image) >= imagestokeep:
+            if images.index(image) >= IMAGES_TO_KEEP:
                 if 'imageTags' in image:
                     for tag in image['imageTags']:
                         if "latest" not in tag:
@@ -123,7 +130,7 @@ def appendtotaglist(list,id):
 
 
 def delete_images(ecr_client, deletesha,deletetag, id, name):
-    if not dryrunflag:
+    if not DRYRUN:
         delete_response = ecr_client.batch_delete_image(
             registryId=id,
             repositoryName=name,
@@ -151,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
-    dryrunflag = args.dryrun
-    region = args.region
-    imagestokeep = int(args.imagestokeep)
+    REGION = args.region
+    DRYRUN = args.dryrun
+    IMAGES_TO_KEEP = int(args.imagestokeep)
     handler(request, None)
