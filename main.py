@@ -153,12 +153,12 @@ def delete_images(ecr_client, deletesha,deletetag, id, name):
 if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
-    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=True, action='store', dest='dryrun')
+    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default='true', action='store', dest='dryrun')
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=100, action='store', dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
     REGION = args.region
-    DRYRUN = args.dryrun
+    DRYRUN = args.dryrun.lower() != 'false'
     IMAGES_TO_KEEP = int(args.imagestokeep)
     handler(request, None)
