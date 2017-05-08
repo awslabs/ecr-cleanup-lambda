@@ -17,15 +17,28 @@ import argparse
 import requests
 
 
-REGION = os.environ.get('REGION', None)
-DRYRUN = bool(os.environ.get('DRYRUN', 1))
-IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
+REGION = None
+DRYRUN = None
+IMAGES_TO_KEEP = None
+
+def initialize():
+    global REGION
+    global DRYRUN
+    global IMAGES_TO_KEEP
+
+    REGION = os.environ.get('REGION', "None")
+    DRYRUN = os.environ.get('DRYRUN', "false").lower()
+    if DRYRUN == "false":
+        DRYRUN = False
+    else:
+        DRYRUN = True
+    IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
 
 
 
 def handler(event, context):
-
-    if not REGION:
+    initialize()
+    if REGION == "None":
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
         for partition in partitions:
             if partition['partition'] == "aws":
@@ -154,11 +167,14 @@ if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
     parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default='true', action='store', dest='dryrun')
-    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=100, action='store', dest='imagestokeep')
+    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store', dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
 
     args = parser.parse_args()
-    REGION = args.region
-    DRYRUN = args.dryrun.lower() != 'false'
-    IMAGES_TO_KEEP = int(args.imagestokeep)
+    if args.region:
+        os.environ["REGION"] = args.region
+    else:
+        os.environ["REGION"] = "None"
+    os.environ["DRYRUN"] = args.dryrun.lower()
+    os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
     handler(request, None)
