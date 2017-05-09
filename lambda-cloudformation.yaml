@@ -21,9 +21,10 @@ Resources:
       Timeout: 300
       Role: !GetAtt LAMBDAROLE.Arn
       Events:
-        Type: Schedule
-        Properties:
-          Schedule: cron(* 22 * * *)
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(* 22 * * *)
       Environment:
         Variables:
           REGION: None
