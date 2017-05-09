@@ -24,7 +24,7 @@ Resources:
         Schedule:
           Type: Schedule
           Properties:
-            Schedule: cron(* 22 * * *)
+            Schedule: cron(0 22 * * ? *)
       Environment:
         Variables:
           REGION: None
