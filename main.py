@@ -12,8 +12,8 @@ limitations under the License.
 '''
 from __future__ import print_function
 import os
-import boto3
 import argparse
+import boto3
 import requests
 
 
@@ -49,7 +49,7 @@ def handler(event, context):
 
 def discover_delete_images(regionname):
     print("Discovering images in "+regionname)
-    ecr_client = boto3.client('ecr',region_name=regionname)
+    ecr_client = boto3.client('ecr', region_name=regionname)
 
     repositories = []
     describerepo_paginator = ecr_client.get_paginator('describe_repositories')
@@ -59,14 +59,14 @@ def discover_delete_images(regionname):
 
     #print(repositories)
 
-    ecs_client = boto3.client('ecs',region_name=regionname)
+    ecs_client = boto3.client('ecs', region_name=regionname)
 
     listclusters_paginator = ecs_client.get_paginator('list_clusters')
     running_containers = []
     for response_listclusterpaginator in listclusters_paginator.paginate():
         for cluster in response_listclusterpaginator['clusterArns']:
             listtasks_paginator = ecs_client.get_paginator('list_tasks')
-            for reponse_listtaskpaginator in listtasks_paginator.paginate(cluster=cluster,desiredStatus='RUNNING'):
+            for reponse_listtaskpaginator in listtasks_paginator.paginate(cluster=cluster, desiredStatus='RUNNING'):
                 if reponse_listtaskpaginator['taskArns']:
                     describe_tasks_list = ecs_client.describe_tasks(
                         cluster=cluster,
@@ -98,7 +98,7 @@ def discover_delete_images(regionname):
             for image in response_describeimagepaginator['imageDetails']:
                 images.append(image)
 
-        images.sort(key=lambda k: k['imagePushedAt'],reverse=True)
+        images.sort(key=lambda k: k['imagePushedAt'], reverse=True)
 
         #Get ImageDigest from ImageURL for running images. Do this for every repository
         running_sha = []
@@ -110,6 +110,7 @@ def discover_delete_images(regionname):
                         if imageurl == runningimages:
                             if imageurl not in running_sha:
                                 running_sha.append(image['imageDigest'])
+        print("Total number of images found: {}".format(len(images)))
         for image in images:
             if images.index(image) >= IMAGES_TO_KEEP:
                 if 'imageTags' in image:
@@ -118,49 +119,53 @@ def discover_delete_images(regionname):
                             if running_sha:
                                 if image['imageDigest'] not in running_sha:
                                     appendtolist(deletesha, image['imageDigest'])
-                                    appendtotaglist(deletetag, imageurl)
-
+                                    appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
                             else:
                                 appendtolist(deletesha, image['imageDigest'])
-                                appendtotaglist(deletetag,imageurl)
-
-
+                                appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
                 else:
                     appendtolist(deletesha, image['imageDigest'])
         if deletesha:
-            delete_images(ecr_client, deletesha,deletetag, repository['registryId'], repository['repositoryName'])
+            print("Number of images to be deleted: {}".format(len(deletesha)))
+            delete_images(
+                ecr_client,
+                deletesha,
+                deletetag,
+                repository['registryId'],
+                repository['repositoryName']
+                )
         else:
             print("Nothing to delete in repository : " + repository['repositoryName'])
 
 
-def appendtolist(list,id):
+def appendtolist(list, id):
     if not {'imageDigest': id} in list:
         list.append({'imageDigest': id})
 
-def appendtotaglist(list,id):
+def appendtotaglist(list, id):
     if not id in list:
         list.append(id)
 
 
-def delete_images(ecr_client, deletesha,deletetag, id, name):
+def delete_images(ecr_client, deletesha, deletetag, id, name):
     if not DRYRUN:
         delete_response = ecr_client.batch_delete_image(
             registryId=id,
             repositoryName=name,
             imageIds=deletesha
-         )
+        )
         print (delete_response)
     else:
         print("{")
         print("registryId:"+id)
         print("repositoryName:"+name)
-        print("imageIds:",end='')
+        print("imageIds:", end='')
         print(deletesha)
         print("}")
     if deletetag:
+        print("Image URLs that are marked for deletion:")
         for ids in deletetag:
-            print("Image URLs that are marked for deletion : " + ids)
-
+            print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
 
 # Below is the test harness
 if __name__ == '__main__':
