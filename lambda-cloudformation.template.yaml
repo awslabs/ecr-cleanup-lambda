@@ -8,7 +8,7 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: automated cleanup of ECR repositories
+Description: Automated cleanup of ECR repositories.
 Resources:
   LambdaFunction:
     Type: AWS::Serverless::Function
@@ -28,12 +28,11 @@ Resources:
       Environment:
         Variables:
           REGION: None
-          DRYRUN: True
+          DRYRUN: False
           IMAGES_TO_KEEP: 100
   LAMBDAROLE:
       Type: AWS::IAM::Role
       Properties:
-        #RoleName: !Sub ${AWS::StackName}-Role-${AWS::Region}
         AssumeRolePolicyDocument:
           Version: 2012-10-17
           Statement:
