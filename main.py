@@ -34,8 +34,6 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
 
-
-
 def handler(event, context):
     initialize()
     if REGION == "None":
@@ -83,48 +81,49 @@ def discover_delete_images(regionname):
                                     if container['image'] not in running_containers:
                                         running_containers.append(container['image'])
 
-    print("Images that are running")
-    print(running_containers)
+    print("Images that are running:")
+    for image in running_containers:
+        print(image)
+
     for repository in repositories:
         print ("------------------------")
         print("Starting with repository :"+repository['repositoryUri'])
         deletesha = []
         deletetag = []
-        images = []
+        tagged_images = []
+
         describeimage_paginator = ecr_client.get_paginator('describe_images')
         for response_describeimagepaginator in describeimage_paginator.paginate(
                 registryId=repository['registryId'],
                 repositoryName=repository['repositoryName']):
             for image in response_describeimagepaginator['imageDetails']:
-                images.append(image)
+                if 'imageTags' in image:
+                    tagged_images.append(image)
+                else:
+                    appendtolist(deletesha, image['imageDigest'])
 
-        images.sort(key=lambda k: k['imagePushedAt'], reverse=True)
+        print("Total number of images found: {}".format(len(tagged_images)+len(deletesha)))
+        print("Number of unttaged images found {}".format(len(deletesha)))
+
+        tagged_images.sort(key=lambda k: k['imagePushedAt'], reverse=True)
 
         #Get ImageDigest from ImageURL for running images. Do this for every repository
         running_sha = []
-        for image in images:
-            if 'imageTags' in image:
+        for image in tagged_images:
+            for tag in image['imageTags']:
+                imageurl = repository['repositoryUri'] + ":" + tag
+                for runningimages in running_containers:
+                    if imageurl == runningimages:
+                        if imageurl not in running_sha:
+                            running_sha.append(image['imageDigest'])
+
+        for image in tagged_images:
+            if tagged_images.index(image) >= IMAGES_TO_KEEP:
                 for tag in image['imageTags']:
-                    imageurl = repository['repositoryUri'] + ":" + tag
-                    for runningimages in running_containers:
-                        if imageurl == runningimages:
-                            if imageurl not in running_sha:
-                                running_sha.append(image['imageDigest'])
-        print("Total number of images found: {}".format(len(images)))
-        for image in images:
-            if images.index(image) >= IMAGES_TO_KEEP:
-                if 'imageTags' in image:
-                    for tag in image['imageTags']:
-                        if "latest" not in tag:
-                            if running_sha:
-                                if image['imageDigest'] not in running_sha:
-                                    appendtolist(deletesha, image['imageDigest'])
-                                    appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
-                            else:
-                                appendtolist(deletesha, image['imageDigest'])
-                                appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
-                else:
-                    appendtolist(deletesha, image['imageDigest'])
+                    if "latest" not in tag:
+                        if not running_sha or image['imageDigest'] not in running_sha:
+                            appendtolist(deletesha, image['imageDigest'])
+                            appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
         if deletesha:
             print("Number of images to be deleted: {}".format(len(deletesha)))
             delete_images(
