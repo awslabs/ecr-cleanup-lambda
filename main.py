@@ -172,8 +172,8 @@ def delete_images(ecr_client, deletesha, deletetag, id, name):
                 print(deletesha_chunk)
     if deletetag:
         print("Image URLs that are marked for deletion:")
-    for ids in deletetag:
-        print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
+        for ids in deletetag:
+            print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
 
 # Below is the test harness
 if __name__ == '__main__':
