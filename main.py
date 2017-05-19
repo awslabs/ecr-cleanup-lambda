@@ -116,6 +116,8 @@ def discover_delete_images(regionname):
                     if imageurl == runningimages:
                         if imageurl not in running_sha:
                             running_sha.append(image['imageDigest'])
+                            
+        print("Number of running images found {}".format(len(running_sha)))
 
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
