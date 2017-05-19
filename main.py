@@ -145,26 +145,35 @@ def appendtotaglist(list, id):
     if not id in list:
         list.append(id)
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 def delete_images(ecr_client, deletesha, deletetag, id, name):
-    if not DRYRUN:
-        delete_response = ecr_client.batch_delete_image(
-            registryId=id,
-            repositoryName=name,
-            imageIds=deletesha
-        )
-        print (delete_response)
-    else:
-        print("{")
-        print("registryId:"+id)
-        print("repositoryName:"+name)
-        print("imageIds:", end='')
-        print(deletesha)
-        print("}")
+    if len(deletesha) >= 1:
+        ## spliting list of images to delete on chunks with 100 images each
+        ## http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_BatchDeleteImage.html#API_BatchDeleteImage_RequestSyntax
+        i = 0
+        for deletesha_chunk in chunks(deletesha, 100):
+            i += 1
+            if not DRYRUN:
+                delete_response = ecr_client.batch_delete_image(
+                    registryId=id,
+                    repositoryName=name,
+                    imageIds=deletesha_chunk
+                )
+                print(delete_response)
+            else:
+                print("registryId:"+id)
+                print("repositoryName:"+name)
+                print("Deleting {} chank of images".format(i))
+                print("imageIds:", end='')
+                print(deletesha_chunk)
     if deletetag:
         print("Image URLs that are marked for deletion:")
-        for ids in deletetag:
-            print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
+    for ids in deletetag:
+        print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
 
 # Below is the test harness
 if __name__ == '__main__':
