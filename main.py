@@ -20,7 +20,7 @@ import requests
 REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
-TAG_TO_DELETE = "SNAPSHOT"
+TAG_TO_DELETE = None
 
 def initialize():
     global REGION
@@ -29,7 +29,8 @@ def initialize():
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
-    TAG_TO_DELETE = os.environ.get('TAG_TO_DELETE', "SNAPSHOT")
+    TAG_TO_DELETE = os.environ.get('TAG_TO_DELETE', "")
+
     if DRYRUN == "false":
         DRYRUN = False
     else:
@@ -124,7 +125,7 @@ def discover_delete_images(regionname):
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
                 for tag in image['imageTags']:
-                    if "latest" not in tag and TAG_TO_DELETE in tag:
+                    if "latest" not in tag and (not TAG_TO_DELETE or TAG_TO_DELETE in tag):
                         if not running_sha or image['imageDigest'] not in running_sha:
                             appendtolist(deletesha, image['imageDigest'])
                             appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
