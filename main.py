@@ -26,6 +26,7 @@ def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
+    global TAG_TO_DELETE
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -39,6 +40,10 @@ def initialize():
 
 def handler(event, context):
     initialize()
+    print("Configuration:")
+    print("Region:" + REGION)
+    print("TAG_TO_DELETE: " + TAG_TO_DELETE)
+    print("DRYRUN: %s" % DRYRUN)
     if REGION == "None":
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
         for partition in partitions:
@@ -119,7 +124,7 @@ def discover_delete_images(regionname):
                     if imageurl == runningimages:
                         if imageurl not in running_sha:
                             running_sha.append(image['imageDigest'])
-                            
+
         print("Number of running images found {}".format(len(running_sha)))
 
         for image in tagged_images:
