@@ -37,13 +37,13 @@ def initialize():
     else:
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
-
-def handler(event, context):
-    initialize()
     print("Configuration:")
     print("Region:" + REGION)
     print("TAG_TO_DELETE: " + TAG_TO_DELETE)
     print("DRYRUN: %s" % DRYRUN)
+
+def handler(event, context):
+    initialize()
     if REGION == "None":
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()['partitions']
         for partition in partitions:
