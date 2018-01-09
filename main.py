@@ -103,7 +103,7 @@ def discover_delete_images(regionname):
                     appendtolist(deletesha, image['imageDigest'])
 
         print("Total number of images found: {}".format(len(tagged_images)+len(deletesha)))
-        print("Number of unttaged images found {}".format(len(deletesha)))
+        print("Number of untagged images found {}".format(len(deletesha)))
 
         tagged_images.sort(key=lambda k: k['imagePushedAt'], reverse=True)
 
