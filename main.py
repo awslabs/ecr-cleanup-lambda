@@ -15,16 +15,22 @@ import os
 import argparse
 import boto3
 import requests
+import re
+import sys
+from datetime import datetime, timedelta, tzinfo
+from dateutil.tz import tzutc
 
 
 REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
+OLDER_THAN = None
 
 def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
+    global OLDER_THAN
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -33,6 +39,7 @@ def initialize():
     else:
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
+    OLDER_THAN = parseInterval(os.environ.get('OLDER_THAN', 'None'))
 
 def handler(event, context):
     initialize()
@@ -124,8 +131,9 @@ def discover_delete_images(regionname):
                 for tag in image['imageTags']:
                     if "latest" not in tag:
                         if not running_sha or image['imageDigest'] not in running_sha:
-                            appendtolist(deletesha, image['imageDigest'])
-                            appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
+                            if OLDER_THAN == None or image["imagePushedAt"] < OLDER_THAN:
+                                appendtolist(deletesha, image['imageDigest'])
+                                appendtotaglist(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag, "pushedAt": image["imagePushedAt"]})
         if deletesha:
             print("Number of images to be deleted: {}".format(len(deletesha)))
             delete_images(
@@ -177,6 +185,20 @@ def delete_images(ecr_client, deletesha, deletetag, id, name):
         for ids in deletetag:
             print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
 
+def parseInterval(timeInterval):
+    if timeInterval == 'None':
+        return None
+
+    timeParts = re.match(r'^(\d+)([mhdw])s?$', timeInterval.strip())
+    if timeParts == None:
+        print('Invalid time format: "%s"' % timeInterval, file=sys.stderr)
+        exit(1)
+
+    secondsPerUnit = { 'm': 60, 'h': 3600, 'd': 86400, 'w': 604800 }
+    (num, unit) = timeParts.groups()
+    seconds = float(num) * secondsPerUnit[unit]
+    return datetime.now(tzutc()) - timedelta(seconds=seconds)
+
 # Below is the test harness
 if __name__ == '__main__':
     request = {"None": "None"}
@@ -184,6 +206,7 @@ if __name__ == '__main__':
     parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default='true', action='store', dest='dryrun')
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store', dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
+    parser.add_argument('-olderthan', help='Only delete images older than specified date interval (e.g. 30m, 12h, 3d, 1w)', default='None', action='store', dest='olderthan')
 
     args = parser.parse_args()
     if args.region:
@@ -192,4 +215,5 @@ if __name__ == '__main__':
         os.environ["REGION"] = "None"
     os.environ["DRYRUN"] = args.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
+    os.environ["OLDER_THAN"] = args.olderthan
     handler(request, None)
