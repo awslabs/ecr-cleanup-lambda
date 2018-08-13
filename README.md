@@ -22,7 +22,7 @@ Install virtualenv:
 
 1. CD to the folder that contains main.py.
 1. Run the following command:
-`pip install -r requirements.txt -t {THE_FOLDER_PATH}`
+`pip install -r requirements.txt -t `pwd``
 1. Compress the contents of folder (not the folder).
     
 ## Upload the package to Lambda
@@ -59,4 +59,7 @@ Deletes the images that are not used by running tasks and which are older than t
 
 `python main.py –dryrun False –imagestokeep 20 –region us-west-2`
 
+Deletes the images that are not used by running tasks and which are older than the last 20 versions (in each repository), in Oregon only, and ignore image tags that contains `release` or `archive`:
+
+`python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive`
 
