@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import re
 
 import boto3
 import requests
@@ -21,12 +22,14 @@ import requests
 REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
+IGNORE_TAGS_REGEX = None
 
 
 def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
+    global IGNORE_TAGS_REGEX
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -35,7 +38,7 @@ def initialize():
     else:
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
-
+    IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "")
 
 def handler(event, context):
     initialize()
@@ -127,7 +130,7 @@ def discover_delete_images(regionname):
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
                 for tag in image['imageTags']:
-                    if "latest" not in tag:
+                    if "latest" not in tag and re.compile(IGNORE_TAGS_REGEX).search(tag) is None:
                         if not running_sha or image['imageDigest'] not in running_sha:
                             append_to_list(deletesha, image['imageDigest'])
                             append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
@@ -196,6 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store',
                         dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
+    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=None, action='store', dest='ignoretagsregex')
 
     args = parser.parse_args()
     if args.region:
@@ -204,4 +208,5 @@ if __name__ == '__main__':
         os.environ["REGION"] = "None"
     os.environ["DRYRUN"] = args.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
+    os.environ["IGNORE_TAGS_REGEX"] = args.ignoretagsregex
     handler(request, None)
