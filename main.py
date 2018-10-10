@@ -26,23 +26,7 @@ IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
 REPOSITORIES_FILTER = None
 
-def initialize():
-    global REGION
-    global DRYRUN
-    global IMAGES_TO_KEEP
-    global IGNORE_TAGS_REGEX
-
-    REGION = os.environ.get('REGION', "None")
-    DRYRUN = os.environ.get('DRYRUN', "false").lower()
-    if DRYRUN == "false":
-        DRYRUN = False
-    else:
-        DRYRUN = True
-    IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
-    IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "")
-
 def handler(event, context):
-    initialize()
     if REGION == "None":
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()[
                 'partitions']
@@ -68,7 +52,7 @@ def discover_delete_images(regionname):
     describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
     for response_listrepopaginator in describe_repo_paginator.paginate():
         for repo in response_listrepopaginator['repositories']:
-            if REPOSITORIES_FILTER is not None:
+            if REPOSITORIES_FILTER:
               if repo['repositoryName'] in REPOSITORIES_FILTER:
                 repositories.append(repo)
             else:
@@ -137,7 +121,7 @@ def discover_delete_images(regionname):
         print("Number of running images found {}".format(len(running_sha)))
 
         for image in tagged_images:
-            if tagged_images.index(image) >= IMAGES_TO_KEEP:
+            if tagged_images.index(image) >= int(IMAGES_TO_KEEP):
                 if ignore_tags_image(image,running_sha):
                     continue
                 for tag in image['imageTags']:
@@ -203,23 +187,25 @@ def delete_images(ecr_client, deletesha, deletetag, id, name):
 if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
-    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default='true',
+    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=os.environ.get('DRYRUN', "true"),
                         action='store', dest='dryrun')
-    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store',
+    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=os.environ.get('IMAGES_TO_KEEP', "100"), action='store',
                         dest='imagestokeep')
-    parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
-    parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=None, nargs='+', action='store', dest='repositories_filter')
-
-    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="", action='store', dest='ignoretagsregex')
+    parser.add_argument('-region', help='ECR/ECS region', default=os.environ.get('REGION', "None"), action='store', dest='region')
+    parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=os.environ.get('REPOSITORIES_FILTER', "").split(),
+                         nargs='+', action='store', dest='repositories_filter')
+    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=os.environ.get('IGNORE_TAGS_REGEX', ""), action='store', dest='ignoretagsregex')
 
     args = parser.parse_args()
-    if args.region:
-        os.environ["REGION"] = args.region
+
+    REGION = args.region
+    if args.dryrun.lower() == "false":
+        DRYRUN = False
     else:
-        os.environ["REGION"] = "None"
-    os.environ["DRYRUN"] = args.dryrun.lower()
-    os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
-    os.environ["IGNORE_TAGS_REGEX"] = args.ignoretagsregex
+        DRYRUN = True
+
+    IMAGES_TO_KEEP = args.imagestokeep
+    IGNORE_TAGS_REGEX = args.ignoretagsregex
     REPOSITORIES_FILTER = args.repositories_filter
 
     handler(request, None)
