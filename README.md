@@ -63,3 +63,7 @@ Deletes the images that are not used by running tasks and which are older than t
 
 `python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive`
 
+
+Deletes the images that are not used by running tasks and which are older than the last 20 versions (in foo and bar repositories), in Oregon only, and ignore image tags that contains `release` or `archive`:
+
+`python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive -repositories foo bar`

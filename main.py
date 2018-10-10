@@ -23,7 +23,7 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
-
+REPOSITORIES_FILTER = None
 
 def initialize():
     global REGION
@@ -61,9 +61,11 @@ def discover_delete_images(regionname):
     describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
     for response_listrepopaginator in describe_repo_paginator.paginate():
         for repo in response_listrepopaginator['repositories']:
-            repositories.append(repo)
-
-    # print(repositories)
+            if REPOSITORIES_FILTER is not None:
+              if repo['repositoryName'] in REPOSITORIES_FILTER:
+                repositories.append(repo)
+            else:
+              repositories.append(repo)
 
     ecs_client = boto3.client('ecs', region_name=regionname)
 
@@ -199,6 +201,8 @@ if __name__ == '__main__':
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store',
                         dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
+    parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=None, nargs='+', action='store', dest='repositories_filter')
+
     parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="", action='store', dest='ignoretagsregex')
 
     args = parser.parse_args()
@@ -209,4 +213,6 @@ if __name__ == '__main__':
     os.environ["DRYRUN"] = args.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
     os.environ["IGNORE_TAGS_REGEX"] = args.ignoretagsregex
+    REPOSITORIES_FILTER = args.repositories_filter
+
     handler(request, None)
