@@ -120,14 +120,18 @@ def discover_delete_images(regionname):
 
         print("Number of running images found {}".format(len(running_sha)))
 
+        image_count = 0
         for image in tagged_images:
-            if tagged_images.index(image) >= int(IMAGES_TO_KEEP):
-                if ignore_tags_image(image,running_sha):
-                    continue
+            print(image['imageDigest'])
+            if ignore_tags_image(image,running_sha):
+                continue
+            if image_count >= int(IMAGES_TO_KEEP):
                 for tag in image['imageTags']:
                     append_to_list(deletesha, image['imageDigest'])
                     append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
-                                                  "pushedAt": image["imagePushedAt"]})
+                                                    "pushedAt": image["imagePushedAt"]})
+            image_count += 1
+
         if deletesha:
             print("Number of images to be deleted: {}".format(len(deletesha)))
             delete_images(
