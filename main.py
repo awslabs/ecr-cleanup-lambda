@@ -52,6 +52,12 @@ def handler(event, context):
     else:
         discover_delete_images(REGION)
 
+def ignore_tags_image(image,running_sha):
+    for tag in image['imageTags']:
+        if "latest" in tag or re.compile(IGNORE_TAGS_REGEX).search(tag) is not None or (running_sha and image['imageDigest'] in running_sha):
+            return True
+    return False
+
 
 def discover_delete_images(regionname):
     print("Discovering images in " + regionname)
@@ -131,12 +137,12 @@ def discover_delete_images(regionname):
 
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
+                if ignore_tags_image(image,running_sha):
+                    continue
                 for tag in image['imageTags']:
-                    if "latest" not in tag and re.compile(IGNORE_TAGS_REGEX).search(tag) is None:
-                        if not running_sha or image['imageDigest'] not in running_sha:
-                            append_to_list(deletesha, image['imageDigest'])
-                            append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
-                                                        "pushedAt": image["imagePushedAt"]})
+                    append_to_list(deletesha, image['imageDigest'])
+                    append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
+                                                  "pushedAt": image["imagePushedAt"]})
         if deletesha:
             print("Number of images to be deleted: {}".format(len(deletesha)))
             delete_images(
