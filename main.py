@@ -24,6 +24,7 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
+FILTER_TAGS_REGEX = None
 REPOSITORIES_FILTER = None
 
 def handler(event, context):
@@ -38,10 +39,18 @@ def handler(event, context):
         discover_delete_images(REGION)
 
 def ignore_tags_image(image,running_sha):
+    skip = False
+    if (FILTER_TAGS_REGEX != ""):
+        skip = True
+
     for tag in image['imageTags']:
-        if "latest" in tag or re.compile(IGNORE_TAGS_REGEX).search(tag) is not None or (running_sha and image['imageDigest'] in running_sha):
+        if ( "latest" in tag
+                or re.compile(IGNORE_TAGS_REGEX).search(tag) is not None
+                or (running_sha and image['imageDigest'] in running_sha)):
             return True
-    return False
+        if (re.compile(FILTER_TAGS_REGEX).search(tag) is not None):
+            skip=False
+    return skip
 
 
 def discover_delete_images(regionname):
@@ -122,7 +131,6 @@ def discover_delete_images(regionname):
 
         image_count = 0
         for image in tagged_images:
-            print(image['imageDigest'])
             if ignore_tags_image(image,running_sha):
                 continue
             if image_count >= int(IMAGES_TO_KEEP):
@@ -199,6 +207,7 @@ if __name__ == '__main__':
     parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=os.environ.get('REPOSITORIES_FILTER', "").split(),
                          nargs='+', action='store', dest='repositories_filter')
     parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=os.environ.get('IGNORE_TAGS_REGEX', ""), action='store', dest='ignoretagsregex')
+    parser.add_argument('-filtertagsregex', help='Regex filter of tag names to limit on images with matching tag', default=os.environ.get('FILTER_TAGS_REGEX', ""), action='store', dest='filtertagsregex')
 
     args = parser.parse_args()
 
@@ -210,6 +219,7 @@ if __name__ == '__main__':
 
     IMAGES_TO_KEEP = args.imagestokeep
     IGNORE_TAGS_REGEX = args.ignoretagsregex
+    FILTER_TAGS_REGEX = args.filtertagsregex
     REPOSITORIES_FILTER = args.repositories_filter
 
     handler(request, None)
