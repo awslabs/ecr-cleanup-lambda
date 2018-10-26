@@ -38,7 +38,7 @@ def initialize():
     else:
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
-    IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "")
+    IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
 
 def handler(event, context):
     initialize()
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store',
                         dest='imagestokeep')
     parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
-    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="", action='store', dest='ignoretagsregex')
+    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="^$", action='store', dest='ignoretagsregex')
 
     args = parser.parse_args()
     if args.region:
