@@ -43,6 +43,7 @@ def initialize():
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
 
+
 def handler(event, context):
     initialize()
     if REGION == "None":
@@ -151,14 +152,14 @@ def discover_delete_images(regionname):
             print("Nothing to delete in repository : " + repository['repositoryName'])
 
 
-def append_to_list(list, id):
-    if not {'imageDigest': id} in list:
-        list.append({'imageDigest': id})
+def append_to_list(items, val):
+    if {'imageDigest': val} not in items:
+        items.append({'imageDigest': val})
 
 
-def append_to_tag_list(list, id):
-    if not id in list:
-        list.append(id)
+def append_to_tag_list(tags, tag):
+    if tag not in tags:
+        tags.append(tag)
 
 
 def chunks(l, n):
