@@ -18,7 +18,10 @@ import os
 import re
 
 import boto3
-import requests
+try:
+    import requests
+except ImportError:
+    from botocore.vendored import requests
 
 REGION = None
 DRYRUN = None
