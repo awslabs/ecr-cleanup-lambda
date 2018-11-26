@@ -206,7 +206,7 @@ if __name__ == '__main__':
     parser.add_argument('-region', help='ECR/ECS region', default=os.environ.get('REGION', "None"), action='store', dest='region')
     parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=os.environ.get('REPOSITORIES_FILTER', "").split(),
                          nargs='+', action='store', dest='repositories_filter')
-    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=os.environ.get('IGNORE_TAGS_REGEX', ""), action='store', dest='ignoretagsregex')
+    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=os.environ.get('IGNORE_TAGS_REGEX', "^$"), action='store', dest='ignoretagsregex')
     parser.add_argument('-filtertagsregex', help='Regex filter of tag names to limit on images with matching tag', default=os.environ.get('FILTER_TAGS_REGEX', ""), action='store', dest='filtertagsregex')
 
     args = parser.parse_args()
