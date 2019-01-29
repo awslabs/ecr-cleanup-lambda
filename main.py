@@ -152,12 +152,12 @@ def discover_delete_images(regionname):
 
 
 def append_to_list(list, id):
-    if not {'imageDigest': id} in list:
-        list.append({'imageDigest': id})
+    if {"imageDigest": id} not in list:
+        list.append({"imageDigest": id})
 
 
 def append_to_tag_list(list, id):
-    if not id in list:
+    if id not in list:
         list.append(id)
 
 
