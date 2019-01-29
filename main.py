@@ -102,7 +102,7 @@ def discover_delete_images(regionname):
 
     for repository in repositories:
         print("------------------------")
-        print("Starting with repository :" + repository['repositoryUri'])
+        print("Starting with repository:", repository["repositoryUri"])
         deletesha = []
         deletetag = []
         tagged_images = []
@@ -118,7 +118,7 @@ def discover_delete_images(regionname):
                     append_to_list(deletesha, image['imageDigest'])
 
         print("Total number of images found: {}".format(len(tagged_images) + len(deletesha)))
-        print("Number of untagged images found {}".format(len(deletesha)))
+        print("Number of untagged images found: {}".format(len(deletesha)))
 
         tagged_images.sort(key=lambda k: k['imagePushedAt'], reverse=True)
 
@@ -132,7 +132,7 @@ def discover_delete_images(regionname):
                         if imageurl not in running_sha:
                             running_sha.append(image['imageDigest'])
 
-        print("Number of running images found {}".format(len(running_sha)))
+        print("Number of running images found: {}".format(len(running_sha)))
 
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
@@ -152,7 +152,7 @@ def discover_delete_images(regionname):
                 repository['repositoryName']
             )
         else:
-            print("Nothing to delete in repository : " + repository['repositoryName'])
+            print("Nothing to delete in repository: " + repository["repositoryName"])
 
 
 def append_to_list(list, id):
@@ -171,29 +171,32 @@ def chunks(l, n):
         yield l[i:i + n]
 
 
-def delete_images(ecr_client, deletesha, deletetag, id, name):
-    if len(deletesha) >= 1:
-        ## spliting list of images to delete on chunks with 100 images each
-        ## http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_BatchDeleteImage.html#API_BatchDeleteImage_RequestSyntax
-        i = 0
-        for deletesha_chunk in chunks(deletesha, 100):
-            i += 1
+def delete_images(
+    ecr_client, image_ids_to_delete, tagged_for_deletion, repository_id, repository_name
+):
+    if image_ids_to_delete:
+        # spliting list of images to delete on chunks with 100 images each
+        # http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_BatchDeleteImage.html#API_BatchDeleteImage_RequestSyntax
+        for chunk_number, image_id_chunk in enumerate(
+            chunks(image_ids_to_delete, 100), start=1
+        ):
             if not DRY_RUN:
                 delete_response = ecr_client.batch_delete_image(
-                    registryId=id,
-                    repositoryName=name,
-                    imageIds=deletesha_chunk
+                    registryId=repository_id,
+                    repositoryName=repository_name,
+                    imageIds=image_id_chunk,
                 )
                 print(delete_response)
             else:
-                print("registryId:" + id)
-                print("repositoryName:" + name)
-                print("Deleting {} chank of images".format(i))
-                print("imageIds:", end='')
-                print(deletesha_chunk)
-    if deletetag:
+                print(f"Repository: {repository_name} ({repository_id})")
+                print(f"Deleting chunk #{chunk_number}: {len(image_id_chunk)} images")
+                print("Image digests:")
+                for image_id in image_id_chunk:
+                    print("\t", image_id["imageDigest"])
+
+    if tagged_for_deletion:
         print("Image URLs that are marked for deletion:")
-        for ids in deletetag:
+        for ids in tagged_for_deletion:
             print("- {} - {}".format(ids["imageUrl"], ids["pushedAt"]))
 
 
