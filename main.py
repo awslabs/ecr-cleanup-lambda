@@ -17,6 +17,7 @@ import os
 import re
 
 import boto3
+
 try:
     import requests
 except ImportError:
@@ -42,6 +43,7 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+
 
 def handler(event, context):
     initialize()
