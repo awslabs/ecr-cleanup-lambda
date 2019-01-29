@@ -23,7 +23,7 @@ try:
 except ImportError:
     from botocore.vendored import requests
 
-REGION = None
+REGION = "ALL"
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
@@ -35,8 +35,8 @@ def initialize():
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
 
-    REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
+    REGION = os.environ.get("REGION", "ALL")
     if DRYRUN == "false":
         DRYRUN = False
     else:
@@ -47,9 +47,10 @@ def initialize():
 
 def handler(event, context):
     initialize()
-    if REGION == "None":
-        partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()[
-                'partitions']
+    partitions = requests.get(
+        "https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json"
+    ).json()["partitions"]
+    if REGION == "ALL":
         for partition in partitions:
             if partition['partition'] == "aws":
                 for endpoint in partition['services']['ecs']['endpoints']:
@@ -210,7 +211,7 @@ if __name__ == '__main__':
     if args.region:
         os.environ["REGION"] = args.region
     else:
-        os.environ["REGION"] = "None"
+        os.environ["REGION"] = "ALL"
     os.environ["DRYRUN"] = args.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
     os.environ["IGNORE_TAGS_REGEX"] = args.ignoretagsregex
