@@ -30,7 +30,27 @@ IGNORE_TAGS_REGEX = None
 FILTER_TAGS_REGEX = None
 REPOSITORIES_FILTER = None
 
+def initialize():
+    global REGION
+    global DRYRUN
+    global IMAGES_TO_KEEP
+    global IGNORE_TAGS_REGEX
+    global FILTER_TAGS_REGEX
+    global REPOSITORIES_FILTER
+
+    REGION = os.environ.get('REGION', "None")
+    DRYRUN = os.environ.get('DRYRUN', "false").lower()
+    if DRYRUN == "false":
+        DRYRUN = False
+    else:
+        DRYRUN = True
+    IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
+    IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    FILTER_TAGS_REGEX = os.environ.get('FILTER_TAGS_REGEX', "")
+    REPOSITORIES_FILTER = os.environ.get('REPOSITORIES_FILTER', "")
+
 def handler(event, context):
+    initialize()
     if REGION == "None":
         partitions = requests.get("https://raw.githubusercontent.com/boto/botocore/develop/botocore/data/endpoints.json").json()[
                 'partitions']
