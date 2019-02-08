@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
@@ -26,13 +27,16 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
-
+FILTER_TAGS_REGEX = None
+REPOSITORIES_FILTER = None
 
 def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
+    global FILTER_TAGS_REGEX
+    global REPOSITORIES_FILTER
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -42,6 +46,8 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    FILTER_TAGS_REGEX = os.environ.get('FILTER_TAGS_REGEX', "")
+    REPOSITORIES_FILTER = os.environ.get('REPOSITORIES_FILTER', "")
 
 def handler(event, context):
     initialize()
@@ -55,6 +61,20 @@ def handler(event, context):
     else:
         discover_delete_images(REGION)
 
+def ignore_tags_image(image,running_sha):
+    skip = False
+    if (FILTER_TAGS_REGEX != ""):
+        skip = True
+
+    for tag in image['imageTags']:
+        if ( "latest" in tag
+                or re.compile(IGNORE_TAGS_REGEX).search(tag) is not None
+                or (running_sha and image['imageDigest'] in running_sha)):
+            return True
+        if (re.compile(FILTER_TAGS_REGEX).search(tag) is not None):
+            skip=False
+    return skip
+
 
 def discover_delete_images(regionname):
     print("Discovering images in " + regionname)
@@ -64,9 +84,11 @@ def discover_delete_images(regionname):
     describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
     for response_listrepopaginator in describe_repo_paginator.paginate():
         for repo in response_listrepopaginator['repositories']:
-            repositories.append(repo)
-
-    # print(repositories)
+            if REPOSITORIES_FILTER:
+              if repo['repositoryName'] in REPOSITORIES_FILTER:
+                repositories.append(repo)
+            else:
+              repositories.append(repo)
 
     ecs_client = boto3.client('ecs', region_name=regionname)
 
@@ -130,14 +152,17 @@ def discover_delete_images(regionname):
 
         print("Number of running images found {}".format(len(running_sha)))
 
+        image_count = 0
         for image in tagged_images:
-            if tagged_images.index(image) >= IMAGES_TO_KEEP:
+            if ignore_tags_image(image,running_sha):
+                continue
+            if image_count >= int(IMAGES_TO_KEEP):
                 for tag in image['imageTags']:
-                    if "latest" not in tag and re.compile(IGNORE_TAGS_REGEX).search(tag) is None:
-                        if not running_sha or image['imageDigest'] not in running_sha:
-                            append_to_list(deletesha, image['imageDigest'])
-                            append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
-                                                        "pushedAt": image["imagePushedAt"]})
+                    append_to_list(deletesha, image['imageDigest'])
+                    append_to_tag_list(deletetag, {"imageUrl": repository['repositoryUri'] + ":" + tag,
+                                                    "pushedAt": image["imagePushedAt"]})
+            image_count += 1
+
         if deletesha:
             print("Number of images to be deleted: {}".format(len(deletesha)))
             delete_images(
@@ -197,19 +222,27 @@ def delete_images(ecr_client, deletesha, deletetag, id, name):
 if __name__ == '__main__':
     request = {"None": "None"}
     parser = argparse.ArgumentParser(description='Deletes stale ECR images')
-    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default='true',
+    parser.add_argument('-dryrun', help='Prints the repository to be deleted without deleting them', default=os.environ.get('DRYRUN', "true"),
                         action='store', dest='dryrun')
-    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default='100', action='store',
+    parser.add_argument('-imagestokeep', help='Number of image tags to keep', default=os.environ.get('IMAGES_TO_KEEP', "100"), action='store',
                         dest='imagestokeep')
-    parser.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
-    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="^$", action='store', dest='ignoretagsregex')
+    parser.add_argument('-region', help='ECR/ECS region', default=os.environ.get('REGION', "None"), action='store', dest='region')
+    parser.add_argument('-repositories', help='Filter for repositories names discovery separated by space', default=os.environ.get('REPOSITORIES_FILTER', "").split(),
+                         nargs='+', action='store', dest='repositories_filter')
+    parser.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default=os.environ.get('IGNORE_TAGS_REGEX', "^$"), action='store', dest='ignoretagsregex')
+    parser.add_argument('-filtertagsregex', help='Regex filter of tag names to limit on images with matching tag', default=os.environ.get('FILTER_TAGS_REGEX', ""), action='store', dest='filtertagsregex')
 
     args = parser.parse_args()
-    if args.region:
-        os.environ["REGION"] = args.region
+
+    REGION = args.region
+    if args.dryrun.lower() == "false":
+        DRYRUN = False
     else:
-        os.environ["REGION"] = "None"
-    os.environ["DRYRUN"] = args.dryrun.lower()
-    os.environ["IMAGES_TO_KEEP"] = args.imagestokeep
-    os.environ["IGNORE_TAGS_REGEX"] = args.ignoretagsregex
+        DRYRUN = True
+
+    IMAGES_TO_KEEP = args.imagestokeep
+    IGNORE_TAGS_REGEX = args.ignoretagsregex
+    FILTER_TAGS_REGEX = args.filtertagsregex
+    REPOSITORIES_FILTER = args.repositories_filter
+
     handler(request, None)
