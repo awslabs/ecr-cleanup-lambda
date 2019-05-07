@@ -38,7 +38,7 @@ def initialize():
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
 
-def handler():
+def handler(event, context):
     initialize()
     if REGION == "None":
         ec2_client = boto3.client('ec2')
