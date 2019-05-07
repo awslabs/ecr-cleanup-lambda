@@ -17,8 +17,6 @@ s3transfer-0.1.8.dist-info
 six-1.10.0.dist-info
 __pycache__
 s3transfer-0.1.9.dist-info
-requests
 botocore-1.4.68.dist-info
 docutils-0.12.dist-info
-requests-2.11.1.dist-info
 .idea
