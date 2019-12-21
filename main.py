@@ -211,9 +211,9 @@ if __name__ == '__main__':
                         dest='imagestokeep')
     PARSER.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
     PARSER.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="^$", action='store', dest='ignoretagsregex')
-    PARSER.add_argument('-strictIgnore', 
+    PARSER.add_argument('-strictignore', 
                         help='Strictly ignore an image if any tag for this image matched the regex defined in ignoretagsregex option', 
-                        default="false", action='store', dest='strictIgnore')
+                        default="false", action='store', dest='strictignore')
 
     ARGS = PARSER.parse_args()
     if ARGS.region:
@@ -223,5 +223,5 @@ if __name__ == '__main__':
     os.environ["DRYRUN"] = ARGS.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = ARGS.imagestokeep
     os.environ["IGNORE_TAGS_REGEX"] = ARGS.ignoretagsregex
-    os.environ["STRICT_IGNORE"] = ARGS.strictIgnore
+    os.environ["STRICT_IGNORE"] = ARGS.strictignore
     handler(REQUEST, None)
