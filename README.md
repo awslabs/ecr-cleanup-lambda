@@ -61,5 +61,12 @@ Deletes the images that are not used by running tasks and which are older than t
 
 Deletes the images that are not used by running tasks and which are older than the last 20 versions (in each repository), in Oregon only, and ignore image tags that contains `release` or `archive`:
 
+**WARNING**: If an image has multiple tags and one of it tag is matched for ignore but the rest are not, then the image would still be deleted. Consider using *-strictignore* if you are looking for a more strict ignore behavior. 
+
 `python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive`
 
+Strictly skip an image if one of its tags matched the regex defined in -ignoretagsregex. E.g. if image ABC is tagged with *release_123* and *master_123* and -ignoretagsregex is *release_*, then image ABC will not be marked for deletion.
+
+**NOTE**: This flag has no affect if used without *-ignoretagsregex*  
+
+`python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive -strictignore true`

@@ -21,13 +21,14 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
-
+STRICT_IGNORE = None
 
 def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
+    global STRICT_IGNORE
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -37,6 +38,11 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    STRICT_IGNORE = os.environ.get('STRICT_IGNORE', "false").lower()
+    if STRICT_IGNORE == "false":
+        STRICT_IGNORE = False
+    else:
+        STRICT_IGNORE = True
 
 def handler(event, context):
     initialize()
@@ -123,6 +129,17 @@ def discover_delete_images(regionname):
         ignore_tags_regex = re.compile(IGNORE_TAGS_REGEX)
         for image in tagged_images:
             if tagged_images.index(image) >= IMAGES_TO_KEEP:
+                # if strict mode is set, check if at least 1 image matches the regex. Skip image if true
+                if STRICT_IGNORE is True:
+                    ignore_regex_matched = False 
+                    for tag in image['imageTags']:
+                        if ignore_tags_regex.search(tag) is not None:
+                            print("Image to skip because of strict mode: ", image)
+                            ignore_regex_matched = True
+                            break
+                    if ignore_regex_matched is True:
+                        break
+
                 for tag in image['imageTags']:
                     if "latest" not in tag and ignore_tags_regex.search(tag) is None:
                         if not running_sha or image['imageDigest'] not in running_sha:
@@ -194,6 +211,9 @@ if __name__ == '__main__':
                         dest='imagestokeep')
     PARSER.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
     PARSER.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="^$", action='store', dest='ignoretagsregex')
+    PARSER.add_argument('-strictignore', 
+                        help='Strictly ignore an image if any tag for this image matched the regex defined in ignoretagsregex option', 
+                        default="false", action='store', dest='strictignore')
 
     ARGS = PARSER.parse_args()
     if ARGS.region:
@@ -203,4 +223,5 @@ if __name__ == '__main__':
     os.environ["DRYRUN"] = ARGS.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = ARGS.imagestokeep
     os.environ["IGNORE_TAGS_REGEX"] = ARGS.ignoretagsregex
+    os.environ["STRICT_IGNORE"] = ARGS.strictignore
     handler(REQUEST, None)
