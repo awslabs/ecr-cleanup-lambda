@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p zip_folder
           pip install -r requirements.txt --target=zip_folder
-          cp * ./zip_folder
+          cp -R src/* zip_folder
           zip -r ${REPO_NAME}.zip ./zip_folder
       - name: 'Setup terraform'
         uses: hashicorp/setup-terraform@v1
