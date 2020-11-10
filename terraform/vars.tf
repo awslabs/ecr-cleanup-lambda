@@ -9,3 +9,5 @@ variable "IGNORE_TAGS_REGEX" {}
 variable "NAME_OF_FUNCTION" {}
 
 variable "REGION" {}
+
+variable "ECR_REPOS_LIFECYCLE" {}

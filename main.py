@@ -21,13 +21,14 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
-
+ECR_REPOS_LIFECYCLE = None
 
 def initialize():
     global REGION
     global DRYRUN
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
+    global ECR_REPOS_LIFECYCLE
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -37,6 +38,7 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    ECR_REPOS_LIFECYCLE = os.environ.get('ECR_REPOS_LIFECYCLE', "None")
 
 def handler(event, context):
     initialize()
@@ -53,11 +55,7 @@ def discover_delete_images(regionname):
     print("Discovering images in " + regionname)
     ecr_client = boto3.client('ecr', region_name=regionname)
 
-    repositories = []
-    describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
-    for response_listrepopaginator in describe_repo_paginator.paginate():
-        for repo in response_listrepopaginator['repositories']:
-            repositories.append(repo)
+    repositories = ECR_REPOS_LIFECYCLE.split(',')
 
     ecs_client = boto3.client('ecs', region_name=regionname)
 
