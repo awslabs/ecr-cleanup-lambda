@@ -8,12 +8,12 @@ terraform {
     }
   }
 
-/*  backend "s3" {
-    bucket  = "hopin-terraform-remote-state"
-    key     = "evil/eu-west-1/iam/terraform.tfstate"
+  backend "s3" {
+    bucket  = "jportasa-terraform-remote-state"
+    key     = "evil/eu-west-1/ecr-cleanup-lambda/terraform.tfstate"
     region  = "eu-west-1"
     encrypt = true
-  }*/
+  }
 }
 
 provider "aws" {
