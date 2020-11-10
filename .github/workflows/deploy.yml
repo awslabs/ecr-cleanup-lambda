@@ -1,0 +1,50 @@
+name: Deploy code to Lambda
+on: push
+
+env:
+   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+   AWS_REGION: 'eu-west-1'
+   REPO_NAME: ${{ github.event.repository.name }}
+   IMAGES_TO_KEEP: 1
+   IGNORE_TAGS_REGEX: 'whatever'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'checkout'
+        uses: actions/checkout@v2
+      - name: 'setup python 3.8'
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: 'zip it all'
+        run: |
+          mkdir zip_folder
+          pip install -r requirements.txt -t zip_folder
+          pip install . -t zip_folder
+          zip --quiet -r ${REPO_NAME}.zip zip_folder
+      - name: 'setup terraform'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '>=0.13.0 <0.14.0'
+      - name: 'terraform init'
+        working-directory: terraform
+        run: terraform init
+      - name: 'terraform validate'
+        working-directory: terraform
+        run: terraform validate
+      - name: 'terraform plan'
+        working-directory: terraform
+        run: |
+          terraform plan \
+            -out="${REPO_NAME}.tfplan" \
+            -var="DRYRUN=false" \
+            -var="IMAGES_TO_KEEP=${IMAGES_TO_KEEP}" \
+            -var="IGNORE_TAGS_REGEX=${IGNORE_TAGS_REGEX}" \
+            -var="NAME_OF_FUNCTION=${REPO_NAME}" \
+            -var="REGION=${AWS_REGION}"
+      - name: 'terraform apply'
+        working-directory: terraform
+        run: terraform apply -auto-approve "${REPO_NAME}.tfplan"

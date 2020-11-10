@@ -1,20 +1,11 @@
 variable "DRYRUN" {
-  default = false
+  default = true
 }
 
-variable "IMAGES_TO_KEEP" {
-  type = string
-  default = 1
-}
+variable "IMAGES_TO_KEEP" {}
 
-variable "IGNORE_TAGS_REGEX" {
-  default = "whatever"
-}
+variable "IGNORE_TAGS_REGEX" {}
 
-variable "NAME_OF_FUNCTION" {
-  default = "ecr-cleanup-lambda"
-}
+variable "NAME_OF_FUNCTION" {}
 
-variable "REGION" {
-  default = "eu-west-1"
-}
+variable "REGION" {}
