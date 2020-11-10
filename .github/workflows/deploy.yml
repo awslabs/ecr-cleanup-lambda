@@ -10,7 +10,7 @@ env:
    IGNORE_TAGS_REGEX: 'whatever'
 
 jobs:
-  :
+  deploy-lambda:
     runs-on: ubuntu-latest
     steps:
       - name: 'checkout'
