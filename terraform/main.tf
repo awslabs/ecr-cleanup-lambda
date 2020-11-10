@@ -77,9 +77,10 @@ module "lambda_function_existing_package_local" {
   local_existing_package = "../${var.NAME_OF_FUNCTION}.zip"
 
   environment_variables = {
-    IMAGES_TO_KEEP    = tonumber(var.IMAGES_TO_KEEP),
-    IGNORE_TAGS_REGEX = var.IGNORE_TAGS_REGEX,
-    REGION            = var.REGION
+    IMAGES_TO_KEEP      = tonumber(var.IMAGES_TO_KEEP),
+    IGNORE_TAGS_REGEX   = var.IGNORE_TAGS_REGEX,
+    REGION              = var.REGION
+    ECR_REPOS_LIFECYCLE = var.ECR_REPOS_LIFECYCLE
   }
 
   //  allowed_triggers = {
