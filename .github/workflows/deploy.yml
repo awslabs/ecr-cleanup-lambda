@@ -22,9 +22,9 @@ jobs:
           python-version: 3.8
       - name: 'Zip it all'
         run: |
-          mkdir zip_folder
-          pip install -r requirements.txt -t zip_folder
-          zip --quiet -r ${REPO_NAME}.zip zip_folder
+          mkdir -p zip_folder
+          pip install -r requirements.txt --target=zip_folder
+          zip -r ${REPO_NAME}.zip ./zip_folder
       - name: 'Setup terraform'
         uses: hashicorp/setup-terraform@v1
         with:
