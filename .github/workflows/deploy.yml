@@ -23,9 +23,10 @@ jobs:
       - name: 'Zip it all'
         run: |
           mkdir -p zip_folder
-          pip install -r requirements.txt --target=zip_folder
           cp -R src/* zip_folder
-          zip -r ${REPO_NAME}.zip ./zip_folder
+          pip install -r requirements.txt --target=zip_folder
+          cd zip_folder
+          zip -r ../${REPO_NAME}.zip .
       - name: 'Setup terraform'
         uses: hashicorp/setup-terraform@v1
         with:
