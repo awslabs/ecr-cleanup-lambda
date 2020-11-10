@@ -23,7 +23,6 @@ jobs:
         run: |
           mkdir zip_folder
           pip install -r requirements.txt -t zip_folder
-          pip install . -t zip_folder
           zip --quiet -r ${REPO_NAME}.zip zip_folder
       - name: 'setup terraform'
         uses: hashicorp/setup-terraform@v1
