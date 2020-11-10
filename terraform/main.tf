@@ -89,6 +89,10 @@ module "lambda_function_existing_package_local" {
   //      source_arn = "arn:aws:events:eu-west-1:135367859851:rule/RunDaily"
   //    }
   //  }
+  tags ={
+    Environment = "evil"
+    Terraform = "true"
+  }
 }
 
 

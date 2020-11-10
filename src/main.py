@@ -40,6 +40,7 @@ def initialize():
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
     ECR_REPOS_LIFECYCLE = os.environ.get('ECR_REPOS_LIFECYCLE', "None")
 
+
 def handler(event, context):
     initialize()
     if REGION == "None":
@@ -55,7 +56,12 @@ def discover_delete_images(regionname):
     print("Discovering images in " + regionname)
     ecr_client = boto3.client('ecr', region_name=regionname)
 
-    repositories = ECR_REPOS_LIFECYCLE.split(',')
+    repositories = []
+    describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
+    for response_listrepopaginator in describe_repo_paginator.paginate():
+        for repo in response_listrepopaginator['repositories']:
+            if repo['repositoryName'] in ECR_REPOS_LIFECYCLE.split(','):
+                repositories.append(repo)
 
     ecs_client = boto3.client('ecs', region_name=regionname)
 
