@@ -2,13 +2,13 @@ name: Deploy code to Lambda
 on: push
 
 env:
+   IMAGES_TO_KEEP: 1
+   IGNORE_TAGS_REGEX: 'release|archive'
+   ECR_REPOS_LIFECYCLE: 'alpine,apache'
    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
    AWS_REGION: 'eu-west-1'
    REPO_NAME: ${{ github.event.repository.name }}
-   IMAGES_TO_KEEP: 1
-   IGNORE_TAGS_REGEX: 'release|archive'
-   ECR_REPOS_LIFECYCLE: 'alpine,apache'
 
 jobs:
   deploy-lambda:
