@@ -49,3 +49,4 @@ Deletes the images that are not used by running tasks and which are older than t
 
 `python main.py –dryrun False –imagestokeep 20 –region us-west-2 -ignoretagsregex release|archive -ecr_repos_lifecycle 'alpine,apache'`
 
+
