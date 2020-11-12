@@ -41,7 +41,7 @@ jobs:
         uses: reviewdog/action-tflint@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          working-directory: terraform
+          working_directory: terraform
       - name: 'Terraform plan'
         working-directory: terraform
         run: |
