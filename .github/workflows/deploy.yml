@@ -37,7 +37,7 @@ jobs:
       - name: 'Terraform validate'
         working-directory: terraform
         run: terraform validate
-      - name: tflint
+      - name: Terraform Linter
         uses: reviewdog/action-tflint@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
