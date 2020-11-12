@@ -37,6 +37,11 @@ jobs:
       - name: 'Terraform validate'
         working-directory: terraform
         run: terraform validate
+      - name: tflint
+        uses: reviewdog/action-tflint@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: terraform
       - name: 'Terraform plan'
         working-directory: terraform
         run: |
