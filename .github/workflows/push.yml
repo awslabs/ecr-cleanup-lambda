@@ -36,3 +36,4 @@ jobs:
       - name: Lint Terraform
         working-directory: terraform
         uses: actionshub/terraform-lint@master
+
