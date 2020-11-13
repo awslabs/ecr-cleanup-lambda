@@ -1,5 +1,5 @@
 name: Deploy code to Lambda
-on: push
+on:
   push:
     branches:
       - '**'
