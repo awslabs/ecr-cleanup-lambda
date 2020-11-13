@@ -7,15 +7,15 @@ variable "IMAGES_TO_KEEP" {
 }
 
 variable "IGNORE_TAGS_REGEX" {
-  default = 'release|archive'
+  default = "release|archive"
 }
 
 variable "NAME_OF_FUNCTION" {
-  default = 'ecr-cleanup-lambda'
+  default = "ecr-cleanup-lambda"
 }
 
 variable "REGION" {}
 
 variable "ECR_REPOS_LIFECYCLE" {
-  default = 'alpine,apache'
+  default = "alpine,apache"
 }
