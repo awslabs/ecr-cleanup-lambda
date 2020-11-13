@@ -14,7 +14,9 @@ variable "NAME_OF_FUNCTION" {
   default = "ecr-cleanup-lambda"
 }
 
-variable "REGION" {}
+variable "REGION" {
+  default = "None"
+}
 
 variable "ECR_REPOS_LIFECYCLE" {
   default = "alpine,apache"
