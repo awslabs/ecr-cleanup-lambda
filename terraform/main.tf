@@ -83,12 +83,6 @@ module "lambda_function_existing_package_local" {
     ECR_REPOS_LIFECYCLE = var.ECR_REPOS_LIFECYCLE
   }
 
-  //  allowed_triggers = {
-  //    OneRule = {
-  //      principal  = "events.amazonaws.com"
-  //      source_arn = "arn:aws:events:eu-west-1:135367859851:rule/RunDaily"
-  //    }
-  //  }
   tags ={
     Environment = "evil"
     Terraform = "true"
