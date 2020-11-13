@@ -20,3 +20,18 @@ s3transfer-0.1.9.dist-info
 botocore-1.4.68.dist-info
 docutils-0.12.dist-info
 .idea
+DS_Store
+
+### Terraform ###
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+zip_folder
+*.zip

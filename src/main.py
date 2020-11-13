@@ -1,15 +1,3 @@
-'''
-Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with
-the License. A copy of the License is located at
-
-    http://aws.amazon.com/apache2.0/
-
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-'''
 from __future__ import print_function
 
 import argparse
@@ -21,6 +9,7 @@ REGION = None
 DRYRUN = None
 IMAGES_TO_KEEP = None
 IGNORE_TAGS_REGEX = None
+ECR_REPOS_LIFECYCLE = None
 
 
 def initialize():
@@ -28,6 +17,7 @@ def initialize():
     global DRYRUN
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
+    global ECR_REPOS_LIFECYCLE
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -37,6 +27,8 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    ECR_REPOS_LIFECYCLE = os.environ.get('ECR_REPOS_LIFECYCLE', "None")
+
 
 def handler(event, context):
     initialize()
@@ -57,7 +49,8 @@ def discover_delete_images(regionname):
     describe_repo_paginator = ecr_client.get_paginator('describe_repositories')
     for response_listrepopaginator in describe_repo_paginator.paginate():
         for repo in response_listrepopaginator['repositories']:
-            repositories.append(repo)
+            if repo['repositoryName'] in ECR_REPOS_LIFECYCLE.split(','):
+                repositories.append(repo)
 
     ecs_client = boto3.client('ecs', region_name=regionname)
 
