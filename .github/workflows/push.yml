@@ -19,7 +19,7 @@ jobs:
       - name: 'Terraform Init'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: 0.13
+          tf_actions_version: 0.13.5
           tf_actions_subcommand: 'init'
           tf_actions_working_dir: 'terraform'
           tf_actions_comment: true
@@ -28,7 +28,7 @@ jobs:
       - name: 'Terraform Plan'
         uses: hashicorp/terraform-github-actions@master
         with:
-          tf_actions_version: 0.13
+          tf_actions_version: 0.13.5
           tf_actions_subcommand: 'plan'
           tf_actions_working_dir: 'terraform'
           tf_actions_comment: true
