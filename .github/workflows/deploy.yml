@@ -10,7 +10,7 @@ env:
    REPO_NAME: ${{ github.event.repository.name }}
 
 jobs:
-  deploy-lambda:
+  push-lambda:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
@@ -26,20 +26,22 @@ jobs:
           pip install -r requirements.txt --target=zip_folder
           cd zip_folder
           zip -r ../${REPO_NAME}.zip .
-      - name: 'Setup terraform'
-        uses: hashicorp/setup-terraform@v1
+      - name: 'Terraform Init'
+        uses: hashicorp/terraform-github-actions@master
         with:
-          terraform_version: '>=0.13.0 <0.14.0'
-      - name: 'Terraform init'
-        working-directory: terraform
-        run: terraform init
-      - name: 'Terraform validate'
-        working-directory: terraform
-        run: terraform validate
-      - name: 'Terraform plan'
-        working-directory: terraform
-        run: |
-          terraform plan -out="${REPO_NAME}.tfplan"
-      - name: 'Terraform apply'
-        working-directory: terraform
-        run: terraform apply -auto-approve "${REPO_NAME}.tfplan"
+          tf_actions_version: 0.13
+          tf_actions_subcommand: 'init'
+          tf_actions_working_dir: 'terraform'
+          tf_actions_comment: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Terraform Apply'
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: 0.13
+          tf_actions_subcommand: 'apply'
+          tf_actions_working_dir: 'terraform'
+          tf_actions_comment: true
+          args: '-auto-approve'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
