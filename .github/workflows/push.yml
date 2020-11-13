@@ -33,10 +33,6 @@ jobs:
       - name: 'Terraform validate'
         working-directory: terraform
         run: terraform validate
-      - name: 'Terraform plan'
+      - name: Lint Terraform
         working-directory: terraform
-        run: |
-          terraform plan -out="${REPO_NAME}.tfplan"
-      - name: 'Terraform apply'
-        working-directory: terraform
-        run: terraform apply -auto-approve "${REPO_NAME}.tfplan"
+        uses: actionshub/terraform-lint@master
