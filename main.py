@@ -83,6 +83,15 @@ def discover_delete_images(regionname):
                                     if container['image'] not in running_containers:
                                         running_containers.append(container['image'])
 
+    lambda_client = boto3.client('lambda', region_name=regionname)
+    listlambdas_paginator = lambda_client.get_paginator('list_functions')
+    for response_listlambdapaginator in listlambdas_paginator.paginate():
+        for function in response_listlambdapaginator['Functions']:
+            if function["PackageType"] == "Image":
+                function_config = lambda_client.get_function(FunctionName=function["FunctionName"])
+                if function_config["Code"]["ImageUri"] not in running_containers:
+                    running_containers.append(function_config["Code"]["ImageUri"])
+
     print("Images that are running:")
     for image in running_containers:
         print(image)
