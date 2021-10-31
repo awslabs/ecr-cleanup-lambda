@@ -1,5 +1,5 @@
 # Automated Image Cleanup for Amazon ECR
-The Python script and Lambda function described here help clean up images in [Amazon ECR](https://aws.amazon.com/ecr). The script looks for images that are not used in running [Amazon ECS](https://aws.amazon.com/ecs) tasks that can be deleted. You can configure the script to print the image list first to confirm deletions, specify a region, or specify a number of images to keep for potential rollbacks.
+The Python script and Lambda function described here help clean up images in [Amazon ECR](https://aws.amazon.com/ecr). The script looks for images that are not used in running [Amazon ECS](https://aws.amazon.com/ecs) tasks and [Amazon Lambda](https://aws.amazon.com/lambda) container images that can be deleted. You can configure the script to print the image list first to confirm deletions, specify a region, or specify a number of images to keep for potential rollbacks.
 
 ## Authenticate with AWS
 [Configuring the AWS Command Line Interface.](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
