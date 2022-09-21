@@ -104,7 +104,7 @@ def discover_delete_images(regionname):
             for image in response_describeimagepaginator['imageDetails']:
                 # check for age and print it
                 if image['imagePushedAt'] < (datetime.now(timezone.utc) - timedelta(days=MAX_AGE)):
-                    print("**** WARN **** image {}:{} is older than {} days.".format(repository['repositoryName'], image['imageDigest'], MAX_AGE))
+                    print("**** WARN **** image {}@{} is older than {} days.".format(repository['repositoryName'], image['imageDigest'], MAX_AGE))
 
                 if 'imageTags' in image:
                     tagged_images.append(image)
