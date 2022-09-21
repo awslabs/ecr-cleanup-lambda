@@ -16,6 +16,7 @@ import argparse
 import os
 import re
 import boto3
+from datetime import datetime, timezone, timedelta
 
 REGION = None
 DRYRUN = None
@@ -28,6 +29,7 @@ def initialize():
     global DRYRUN
     global IMAGES_TO_KEEP
     global IGNORE_TAGS_REGEX
+    global MAX_AGE
 
     REGION = os.environ.get('REGION', "None")
     DRYRUN = os.environ.get('DRYRUN', "false").lower()
@@ -37,6 +39,7 @@ def initialize():
         DRYRUN = True
     IMAGES_TO_KEEP = int(os.environ.get('IMAGES_TO_KEEP', 100))
     IGNORE_TAGS_REGEX = os.environ.get('IGNORE_TAGS_REGEX', "^$")
+    MAX_AGE = int(os.environ.get('MAX_AGE', 90))
 
 def handler(event, context):
     initialize()
@@ -99,6 +102,10 @@ def discover_delete_images(regionname):
                 registryId=repository['registryId'],
                 repositoryName=repository['repositoryName']):
             for image in response_describeimagepaginator['imageDetails']:
+                # check for age and print it
+                if image['imagePushedAt'] < (datetime.now(timezone.utc) - timedelta(days=MAX_AGE)):
+                    print("**** WARN **** image {}@{} is older than {} days.".format(repository['repositoryName'], image['imageDigest'], MAX_AGE))
+
                 if 'imageTags' in image:
                     tagged_images.append(image)
                 else:
@@ -194,6 +201,7 @@ if __name__ == '__main__':
                         dest='imagestokeep')
     PARSER.add_argument('-region', help='ECR/ECS region', default=None, action='store', dest='region')
     PARSER.add_argument('-ignoretagsregex', help='Regex of tag names to ignore', default="^$", action='store', dest='ignoretagsregex')
+    PARSER.add_argument('-maxage', help='Max allowed age of the image', default='90', action='store', dest='maxage')
 
     ARGS = PARSER.parse_args()
     if ARGS.region:
@@ -203,4 +211,5 @@ if __name__ == '__main__':
     os.environ["DRYRUN"] = ARGS.dryrun.lower()
     os.environ["IMAGES_TO_KEEP"] = ARGS.imagestokeep
     os.environ["IGNORE_TAGS_REGEX"] = ARGS.ignoretagsregex
+    os.environ["MAX_AGE"] = ARGS.maxage
     handler(REQUEST, None)
