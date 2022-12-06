@@ -22,7 +22,7 @@ Install virtualenv:
 
 1. CD to the folder that contains main.py.
 1. Run the following command:
-`pip install -r requirements.txt -t `pwd``
+``pip install -r requirements.txt -t `pwd` ``
 1. Compress the contents of folder (not the folder).
     
 ## Upload the package to Lambda
